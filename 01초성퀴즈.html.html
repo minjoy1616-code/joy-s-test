@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025 밈 초성 퀴즈</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f9ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        .bg-custom-gradient {
+            background-image: linear-gradient(to bottom right, #f8b4d8, #a78bfa); /* More vibrant pastel gradient */
+        }
+        .btn-green-pulse {
+            animation: pulse-green 1s infinite;
+        }
+        .btn-purple-pulse {
+            animation: pulse-purple 1s infinite;
+        }
+        @keyframes pulse-green {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            }
+        }
+        @keyframes pulse-purple {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-pink-100 to-purple-200 flex items-center justify-center min-h-screen">
+    <div id="quiz-container" class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md mx-4 transform transition-all duration-500 hover:scale-105">
+        <h1 class="text-4xl font-extrabold mb-6 text-gray-800">
+            초성 퀴즈 <span class="text-purple-500">게임</span>
+        </h1>
+        <div id="start-screen" class="flex flex-col items-center">
+            <p class="text-gray-600 mb-4 text-lg">총 10문제, 제한 시간 2분!</p>
+            <button id="start-btn" class="w-full bg-purple-400 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-purple-500 transition-colors transform hover:scale-105 active:scale-95 btn-purple-pulse">게임 시작</button>
+        </div>
+        <div id="game-area" class="hidden flex-col items-center">
+            <div id="timer" class="text-2xl font-bold font-mono text-red-500 mb-6 rounded-full bg-red-100 px-6 py-3 shadow-inner">
+                남은 시간: <span id="time-display">120</span>초
+            </div>
+            <div id="quiz-card" class="bg-custom-gradient text-white p-8 rounded-2xl shadow-xl mb-6 w-full transform transition-all duration-500">
+                <p id="question-number" class="text-xl font-semibold mb-2 opacity-80"></p>
+                <p id="initials" class="text-5xl font-extrabold tracking-widest my-4"></p>
+                <p id="question-text" class="text-base italic mt-4 text-white opacity-90"></p>
+            </div>
+            <div id="result" class="text-xl font-bold mb-4 h-6 transition-opacity duration-300"></div>
+            <input type="text" id="user-answer" class="w-full p-4 mb-4 rounded-xl border-2 border-gray-300 bg-gray-50 text-gray-800 focus:outline-none focus:border-purple-400 transition-colors placeholder-gray-400" placeholder="정답을 입력하세요">
+            <button id="submit-btn" class="w-full bg-green-400 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-green-500 transition-colors transform hover:scale-105 active:scale-95">정답 제출</button>
+            <button id="pass-btn" class="w-full bg-gray-400 text-white font-bold py-4 px-8 rounded-xl mt-3 shadow-lg hover:bg-gray-500 transition-colors transform hover:scale-105 active:scale-95 hidden">패스</button>
+        </div>
+        <div id="end-screen" class="hidden flex-col items-center mt-4">
+            <h2 id="final-score" class="text-2xl font-bold mb-4 text-gray-800"></h2>
+            <button id="restart-btn" class="w-full bg-purple-400 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-purple-500 transition-colors transform hover:scale-105 active:scale-95">다시 시작</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 게임 요소를 변수에 할당
+            const startScreen = document.getElementById('start-screen');
+            const gameArea = document.getElementById('game-area');
+            const endScreen = document.getElementById('end-screen');
+            const startBtn = document.getElementById('start-btn');
+            const restartBtn = document.getElementById('restart-btn');
+            const questionNumberEl = document.getElementById('question-number');
+            const initialsEl = document.getElementById('initials');
+            const questionTextEl = document.getElementById('question-text');
+            const userAnswerInput = document.getElementById('user-answer');
+            const submitBtn = document.getElementById('submit-btn');
+            const passBtn = document.getElementById('pass-btn');
+            const resultEl = document.getElementById('result');
+            const timerEl = document.getElementById('timer');
+            const timeDisplayEl = document.getElementById('time-display');
+            const finalScoreEl = document.getElementById('final-score');
+
+            let currentQuestionIndex = 0;
+            let score = 0;
+            let timer;
+            let timeRemaining = 120;
+
+            const questions = [
+                { initials: 'ㅈㅁㅊ', answer: '점메추', question: '점심 메뉴 추천' },
+                { initials: 'ㅇㄱㄹㅇㅂㅂㅂㄱ', answer: '이거레알반박불가', question: '이거 진짜 반박할 수 없을 정도로 사실이라는 뜻' },
+                { initials: 'ㅎㅇㅌ', answer: '화이팅', question: '응원이나 격려할 때. 여전히 초성 밈으로 자주 활용' },
+                { initials: 'ㅆㅅㄹ', answer: '쌉소리', question: '쓸데없는 소리' },
+                { initials: 'ㅇㅁㅇㄱ', answer: '안물안궁', question: '안 물어봤고 안 궁금해' },
+                { initials: 'ㅈㄲ', answer: '젊꼰', question: '젊은 사람인데도 불구하고 나이나 지위 등을 내세워 남을 가르치려 드는 사람을 비꼬는 말' },
+                { initials: 'ㄱㅅ', answer: '갓생', question: '갓(God)과 인생을 합친 말로, 완벽하고 부지런한 삶을 의미' },
+                { initials: 'ㅎㅁㅎ', answer: 'HMH', question: '‘하면한다’의 줄임말 영어표현, 상황에 따라 행동한다고 간단히 표현할 때' },
+                { initials: 'ㅅㅅㅍㄷ', answer: '섹시푸드', question: '강렬하고 중독성 있는 음식 표현' },
+                { initials: 'ㄱㅇㅇ', answer: '귀여워', question: '인터넷·SNS에서 ‘귀여워’를 초성으로 줄여 표현한 밈 단어.' }
+            ];
+
+            // 게임 시작
+            const startGame = () => {
+                currentQuestionIndex = 0;
+                score = 0;
+                timeRemaining = 120;
+                startScreen.classList.add('hidden');
+                gameArea.classList.remove('hidden');
+                endScreen.classList.add('hidden');
+                timerEl.classList.remove('hidden');
+                timeDisplayEl.textContent = timeRemaining;
+                
+                // questions 배열을 섞어서 매번 다른 순서로 게임 진행
+                questions.sort(() => Math.random() - 0.5);
+
+                showQuestion();
+                startTimer();
+            };
+
+            // 타이머 시작
+            const startTimer = () => {
+                timer = setInterval(() => {
+                    timeRemaining--;
+                    timeDisplayEl.textContent = timeRemaining;
+                    if (timeRemaining <= 0) {
+                        endGame();
+                    }
+                }, 1000);
+            };
+
+            // 다음 문제 보여주기
+            const showQuestion = () => {
+                if (currentQuestionIndex < questions.length) {
+                    const currentQuestion = questions[currentQuestionIndex];
+                    questionNumberEl.textContent = `문제 ${currentQuestionIndex + 1}/${questions.length}`;
+                    initialsEl.textContent = currentQuestion.initials;
+                    questionTextEl.textContent = currentQuestion.question;
+                    userAnswerInput.value = '';
+                    userAnswerInput.disabled = false;
+                    submitBtn.classList.remove('hidden');
+                    passBtn.classList.add('hidden');
+                    resultEl.textContent = '';
+                    resultEl.classList.remove('text-green-600', 'text-red-600');
+                    userAnswerInput.focus();
+                } else {
+                    endGame();
+                }
+            };
+
+            // 정답 확인 및 다음 문제로 자동 이동
+            const checkAnswer = () => {
+                const userAnswer = userAnswerInput.value.trim().replace(/\s/g, "");
+                const currentQuestion = questions[currentQuestionIndex];
+
+                if (userAnswer.toLowerCase() === currentQuestion.answer.toLowerCase()) {
+                    resultEl.textContent = '정답입니다! 🎉';
+                    resultEl.classList.add('text-green-600');
+                    score++;
+                    userAnswerInput.disabled = true;
+                    submitBtn.classList.add('hidden');
+                    passBtn.classList.add('hidden');
+                    // 1초 뒤에 다음 문제로 이동
+                    setTimeout(() => {
+                        currentQuestionIndex++;
+                        showQuestion();
+                    }, 1000);
+                } else {
+                    resultEl.textContent = `오답입니다. 정답은 '${currentQuestion.answer}' 입니다.`;
+                    resultEl.classList.add('text-red-600');
+                    submitBtn.classList.add('hidden');
+                    passBtn.classList.remove('hidden');
+                }
+            };
+
+            // 게임 종료
+            const endGame = () => {
+                clearInterval(timer);
+                gameArea.classList.add('hidden');
+                endScreen.classList.remove('hidden');
+                finalScoreEl.textContent = `최종 점수: ${score} / ${questions.length}`;
+            };
+
+            // 이벤트 리스너 설정
+            startBtn.addEventListener('click', startGame);
+
+            submitBtn.addEventListener('click', checkAnswer);
+            
+            passBtn.addEventListener('click', () => {
+                currentQuestionIndex++;
+                showQuestion();
+            });
+
+            restartBtn.addEventListener('click', () => {
+                endScreen.classList.add('hidden');
+                startScreen.classList.remove('hidden');
+                finalScoreEl.textContent = '';
+            });
+
+            userAnswerInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !userAnswerInput.disabled) {
+                    checkAnswer();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
